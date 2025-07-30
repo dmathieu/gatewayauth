@@ -8,6 +8,6 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
     - name: Clone repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Test
       run: make test
