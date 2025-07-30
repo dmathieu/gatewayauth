@@ -1,0 +1,8 @@
+type: gatewayauth
+
+status:
+  class: extension
+  stability:
+    development: [extension]
+  codeowners:
+    active: [dmathieu]
