@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/dmathieu/gatewayauth/internal/authcache"
 )
@@ -21,18 +20,14 @@ type Verifier struct {
 	cache    *authcache.Cache
 }
 
-// New returns a Verifier that calls endpoint and caches results for ttl.
-// When ttl is zero, results are never cached. size is the maximum number of
-// cache entries; it is ignored when ttl is zero.
-func New(endpoint string, ttl time.Duration, size int) *Verifier {
-	v := &Verifier{
+// New returns a Verifier that calls endpoint using the provided HTTP client.
+// When cache is nil, results are never cached.
+func New(endpoint string, client *http.Client, cache *authcache.Cache) *Verifier {
+	return &Verifier{
 		endpoint: endpoint,
-		client:   &http.Client{Timeout: 5 * time.Second},
+		client:   client,
+		cache:    cache,
 	}
-	if ttl > 0 {
-		v.cache = authcache.New(ttl, size)
-	}
-	return v
 }
 
 // Verify checks whether token is authorized. It returns nil on success and a

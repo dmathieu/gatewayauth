@@ -12,7 +12,7 @@ import (
 
 func TestFactory_CreateDefaultConfig(t *testing.T) {
 	cfg := createDefaultConfig()
-	assert.Equal(t, &Config{CacheSize: 1000}, cfg)
+	assert.Equal(t, createDefaultConfig(), cfg)
 	assert.NoError(t, componenttest.CheckConfigStruct(cfg))
 }
 

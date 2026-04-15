@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/client"
+	"go.opentelemetry.io/collector/component/componenttest"
+	"go.opentelemetry.io/collector/extension/extensiontest"
 )
 
 func TestAuthenticate(t *testing.T) {
@@ -22,9 +24,9 @@ func TestAuthenticate(t *testing.T) {
 		wantErr      bool
 	}{
 		{
-			name:         "missing Authorization header",
-			headers:      map[string][]string{},
-			wantErr:      true,
+			name:    "missing Authorization header",
+			headers: map[string][]string{},
+			wantErr: true,
 		},
 		{
 			name:         "endpoint returns 200",
@@ -54,7 +56,14 @@ func TestAuthenticate(t *testing.T) {
 			}))
 			t.Cleanup(srv.Close)
 
-			ext := newExtension(&Config{Endpoint: srv.URL, CacheTTL: time.Minute, CacheSize: 100})
+			cfg := createDefaultConfig().(*Config)
+			cfg.Endpoint = srv.URL
+			cfg.CacheTTL = time.Minute
+
+			ext := newExtension(cfg, extensiontest.NewNopSettings(extensiontest.NopType))
+			require.NoError(t, ext.Start(context.Background(), componenttest.NewNopHost()))
+			t.Cleanup(func() { assert.NoError(t, ext.Shutdown(context.Background())) })
+
 			ctx, err := ext.Authenticate(context.Background(), tt.headers)
 
 			if tt.wantErr {

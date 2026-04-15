@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/url"
 	"time"
+
+	"go.opentelemetry.io/collector/config/confighttp"
 )
 
 // Config defines the configuration for the gatewayauth extension.
@@ -21,6 +23,9 @@ type Config struct {
 	// CacheSize is the maximum number of entries in the auth result cache.
 	// Only relevant when CacheTTL is non-zero. Defaults to 1000.
 	CacheSize int `mapstructure:"cache_size"`
+
+	// HTTPClientConfig configures the HTTP client used to call the auth endpoint.
+	HTTPClientConfig confighttp.ClientConfig `mapstructure:"http_client"`
 
 	// prevent unkeyed literal initialization
 	_ struct{}

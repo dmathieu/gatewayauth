@@ -7,6 +7,7 @@ import (
 
 	"github.com/dmathieu/gatewayauth/internal/metadata"
 	"github.com/stretchr/testify/assert"
+	"go.opentelemetry.io/collector/config/confighttp"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/confmap/confmaptest"
@@ -23,7 +24,12 @@ func TestLoadConfig(t *testing.T) {
 	}{
 		{
 			id:       component.NewID(metadata.Type),
-			expected: &Config{Endpoint: "https://auth.example.com/validate", CacheTTL: 5 * time.Minute, CacheSize: 1000},
+			expected: &Config{
+				Endpoint:         "https://auth.example.com/validate",
+				CacheTTL:         5 * time.Minute,
+				CacheSize:        1000,
+				HTTPClientConfig: confighttp.ClientConfig{Timeout: 5 * time.Second},
+			},
 		},
 	}
 

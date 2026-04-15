@@ -2,3 +2,5 @@ gatewayauth:
   endpoint: "https://auth.example.com/validate"
   cache_ttl: 5m
   cache_size: 1000
+  http_client:
+    timeout: 5s
