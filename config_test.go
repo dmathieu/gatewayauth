@@ -3,6 +3,7 @@ package gatewayauth
 import (
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/dmathieu/gatewayauth/internal/metadata"
 	"github.com/stretchr/testify/assert"
@@ -22,7 +23,7 @@ func TestLoadConfig(t *testing.T) {
 	}{
 		{
 			id:       component.NewID(metadata.Type),
-			expected: &Config{Endpoint: "https://auth.example.com/validate"},
+			expected: &Config{Endpoint: "https://auth.example.com/validate", CacheTTL: 5 * time.Minute},
 		},
 	}
 

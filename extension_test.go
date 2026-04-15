@@ -4,7 +4,9 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -91,4 +93,65 @@ func TestAuthenticate_EndpointUnreachable(t *testing.T) {
 		"Authorization": {"Bearer token"},
 	})
 	assert.Error(t, err)
+}
+
+func TestAuthenticate_CachesSuccessAndDenial(t *testing.T) {
+	t.Parallel()
+
+	var calls atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls.Add(1)
+		if r.Header.Get("Authorization") == "Bearer good" {
+			w.WriteHeader(http.StatusOK)
+		} else {
+			w.WriteHeader(http.StatusUnauthorized)
+		}
+	}))
+	t.Cleanup(srv.Close)
+
+	ext := newExtension(&Config{Endpoint: srv.URL, CacheTTL: time.Minute})
+	headers := map[string][]string{"Authorization": {"Bearer good"}}
+
+	// First call hits the endpoint.
+	_, err := ext.Authenticate(context.Background(), headers)
+	require.NoError(t, err)
+	assert.EqualValues(t, 1, calls.Load())
+
+	// Second call should be served from cache.
+	_, err = ext.Authenticate(context.Background(), headers)
+	require.NoError(t, err)
+	assert.EqualValues(t, 1, calls.Load())
+
+	// Denied tokens are also cached.
+	badHeaders := map[string][]string{"Authorization": {"Bearer bad"}}
+	_, err = ext.Authenticate(context.Background(), badHeaders)
+	assert.Error(t, err)
+	assert.EqualValues(t, 2, calls.Load())
+
+	_, err = ext.Authenticate(context.Background(), badHeaders)
+	assert.Error(t, err)
+	assert.EqualValues(t, 2, calls.Load())
+}
+
+func TestAuthenticate_DoesNotCache5xx(t *testing.T) {
+	t.Parallel()
+
+	var calls atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls.Add(1)
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	t.Cleanup(srv.Close)
+
+	ext := newExtension(&Config{Endpoint: srv.URL, CacheTTL: time.Minute})
+	headers := map[string][]string{"Authorization": {"Bearer token"}}
+
+	_, err := ext.Authenticate(context.Background(), headers)
+	assert.Error(t, err)
+	assert.EqualValues(t, 1, calls.Load())
+
+	// Should hit the endpoint again — 5xx must not be cached.
+	_, err = ext.Authenticate(context.Background(), headers)
+	assert.Error(t, err)
+	assert.EqualValues(t, 2, calls.Load())
 }
