@@ -112,6 +112,22 @@ func TestVerify_DoesNotCache5xx(t *testing.T) {
 	assert.EqualValues(t, 2, calls.Load())
 }
 
+func TestVerify_NoCacheWhenTTLIsZero(t *testing.T) {
+	t.Parallel()
+
+	var calls atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		calls.Add(1)
+		w.WriteHeader(http.StatusOK)
+	}))
+	t.Cleanup(srv.Close)
+
+	v := New(srv.URL, 0)
+	require.NoError(t, v.Verify(context.Background(), "Bearer token"))
+	require.NoError(t, v.Verify(context.Background(), "Bearer token"))
+	assert.EqualValues(t, 2, calls.Load())
+}
+
 func TestVerify_EndpointUnreachable(t *testing.T) {
 	t.Parallel()
 

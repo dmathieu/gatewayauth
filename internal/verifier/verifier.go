@@ -22,19 +22,25 @@ type Verifier struct {
 }
 
 // New returns a Verifier that calls endpoint and caches results for ttl.
+// When ttl is zero, results are never cached.
 func New(endpoint string, ttl time.Duration) *Verifier {
-	return &Verifier{
+	v := &Verifier{
 		endpoint: endpoint,
 		client:   &http.Client{Timeout: 5 * time.Second},
-		cache:    authcache.New(ttl),
 	}
+	if ttl > 0 {
+		v.cache = authcache.New(ttl)
+	}
+	return v
 }
 
 // Verify checks whether token is authorized. It returns nil on success and a
 // non-nil error on denial or failure.
 func (v *Verifier) Verify(ctx context.Context, token string) error {
-	if cached, ok := v.cache.Get(token); ok {
-		return cached
+	if v.cache != nil {
+		if cached, ok := v.cache.Get(token); ok {
+			return cached
+		}
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, v.endpoint, nil)
@@ -55,7 +61,7 @@ func (v *Verifier) Verify(ctx context.Context, token string) error {
 	}
 
 	// Do not cache 5xx: those are service errors, not definitive auth decisions.
-	if resp.StatusCode < 500 {
+	if v.cache != nil && resp.StatusCode < 500 {
 		v.cache.Set(token, authErr)
 	}
 
