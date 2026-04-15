@@ -1,9 +1,13 @@
-// Package authcache provides a thread-safe in-memory cache for auth results.
+// Package authcache provides a thread-safe, size-bounded in-memory cache for
+// auth results. Entries are evicted by LRU when the cache is full; TTL is
+// enforced on reads.
 package authcache
 
 import (
-	"sync"
 	"time"
+
+	"github.com/cespare/xxhash/v2"
+	"github.com/elastic/go-freelru"
 )
 
 type entry struct {
@@ -11,29 +15,33 @@ type entry struct {
 	expiresAt time.Time
 }
 
-// Cache stores auth results keyed by Authorization header value.
-// 5xx responses must not be cached; all other outcomes (success or 4xx) are
-// cached for the configured TTL.
-type Cache struct {
-	mu      sync.RWMutex
-	entries map[string]entry
-	ttl     time.Duration
+func hashString(s string) uint32 {
+	return uint32(xxhash.Sum64String(s))
 }
 
-// New returns a Cache with the given TTL.
-func New(ttl time.Duration) *Cache {
-	return &Cache{
-		entries: make(map[string]entry),
-		ttl:     ttl,
+// Cache stores auth results keyed by Authorization header value.
+// 5xx responses must not be cached; all other outcomes (success or 4xx) are
+// cached for the configured TTL. When the cache reaches capacity, the
+// least-recently-used entry is evicted automatically.
+type Cache struct {
+	lru *freelru.SyncedLRU[string, entry]
+	ttl time.Duration
+}
+
+// New returns a Cache with the given TTL and maximum number of entries.
+func New(ttl time.Duration, size int) *Cache {
+	lru, err := freelru.NewSynced[string, entry](uint32(size), hashString)
+	if err != nil {
+		// NewSynced only errors on size <= 0, which Validate prevents.
+		panic(err)
 	}
+	return &Cache{lru: lru, ttl: ttl}
 }
 
 // Get returns the cached error for key and true if a non-expired entry exists.
 // A nil error means the request was previously granted.
 func (c *Cache) Get(key string) (error, bool) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	e, ok := c.entries[key]
+	e, ok := c.lru.Get(key)
 	if !ok || time.Now().After(e.expiresAt) {
 		return nil, false
 	}
@@ -42,7 +50,5 @@ func (c *Cache) Get(key string) (error, bool) {
 
 // Set stores err for key, expiring after the configured TTL.
 func (c *Cache) Set(key string, err error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.entries[key] = entry{err: err, expiresAt: time.Now().Add(c.ttl)}
+	c.lru.Add(key, entry{err: err, expiresAt: time.Now().Add(c.ttl)})
 }

@@ -23,7 +23,7 @@ func TestLoadConfig(t *testing.T) {
 	}{
 		{
 			id:       component.NewID(metadata.Type),
-			expected: &Config{Endpoint: "https://auth.example.com/validate", CacheTTL: 5 * time.Minute},
+			expected: &Config{Endpoint: "https://auth.example.com/validate", CacheTTL: 5 * time.Minute, CacheSize: 1000},
 		},
 	}
 
@@ -59,6 +59,11 @@ func TestConfigValidate(t *testing.T) {
 		{
 			name: "valid endpoint",
 			cfg:  &Config{Endpoint: "https://auth.example.com/validate"},
+		},
+		{
+			name:    "cache_ttl set but cache_size zero",
+			cfg:     &Config{Endpoint: "https://auth.example.com/validate", CacheTTL: time.Minute},
+			wantErr: true,
 		},
 		{
 			name:    "empty endpoint",

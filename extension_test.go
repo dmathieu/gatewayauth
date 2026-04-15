@@ -54,7 +54,7 @@ func TestAuthenticate(t *testing.T) {
 			}))
 			t.Cleanup(srv.Close)
 
-			ext := newExtension(&Config{Endpoint: srv.URL, CacheTTL: time.Minute})
+			ext := newExtension(&Config{Endpoint: srv.URL, CacheTTL: time.Minute, CacheSize: 100})
 			ctx, err := ext.Authenticate(context.Background(), tt.headers)
 
 			if tt.wantErr {

@@ -18,6 +18,10 @@ type Config struct {
 	// cached regardless of this value. Defaults to 0 (no caching).
 	CacheTTL time.Duration `mapstructure:"cache_ttl"`
 
+	// CacheSize is the maximum number of entries in the auth result cache.
+	// Only relevant when CacheTTL is non-zero. Defaults to 1000.
+	CacheSize int `mapstructure:"cache_size"`
+
 	// prevent unkeyed literal initialization
 	_ struct{}
 }
@@ -29,6 +33,9 @@ func (cfg *Config) Validate() error {
 	}
 	if _, err := url.ParseRequestURI(cfg.Endpoint); err != nil {
 		return fmt.Errorf("endpoint is not a valid URL: %w", err)
+	}
+	if cfg.CacheTTL > 0 && cfg.CacheSize <= 0 {
+		return errors.New("cache_size must be greater than 0 when cache_ttl is set")
 	}
 	return nil
 }

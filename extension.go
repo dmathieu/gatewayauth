@@ -24,7 +24,7 @@ type gatewayAuth struct {
 
 func newExtension(cfg *Config) *gatewayAuth {
 	return &gatewayAuth{
-		verifier: verifier.New(cfg.Endpoint, cfg.CacheTTL),
+		verifier: verifier.New(cfg.Endpoint, cfg.CacheTTL, cfg.CacheSize),
 	}
 }
 

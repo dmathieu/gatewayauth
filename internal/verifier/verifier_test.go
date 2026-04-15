@@ -35,7 +35,7 @@ func TestVerify(t *testing.T) {
 			}))
 			t.Cleanup(srv.Close)
 
-			v := New(srv.URL, 0)
+			v := New(srv.URL, 0, 0)
 			err := v.Verify(context.Background(), "Bearer token")
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -56,7 +56,7 @@ func TestVerify_ForwardsAuthorizationHeader(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	v := New(srv.URL, 0)
+	v := New(srv.URL, 0, 0)
 	require.NoError(t, v.Verify(context.Background(), "Bearer secret"))
 	assert.Equal(t, "Bearer secret", received)
 }
@@ -75,7 +75,7 @@ func TestVerify_CachesSuccessAndDenial(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	v := New(srv.URL, time.Minute)
+	v := New(srv.URL, time.Minute, 100)
 
 	require.NoError(t, v.Verify(context.Background(), "Bearer good"))
 	assert.EqualValues(t, 1, calls.Load())
@@ -102,7 +102,7 @@ func TestVerify_DoesNotCache5xx(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	v := New(srv.URL, time.Minute)
+	v := New(srv.URL, time.Minute, 100)
 
 	assert.Error(t, v.Verify(context.Background(), "Bearer token"))
 	assert.EqualValues(t, 1, calls.Load())
@@ -122,7 +122,7 @@ func TestVerify_NoCacheWhenTTLIsZero(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	v := New(srv.URL, 0)
+	v := New(srv.URL, 0, 0)
 	require.NoError(t, v.Verify(context.Background(), "Bearer token"))
 	require.NoError(t, v.Verify(context.Background(), "Bearer token"))
 	assert.EqualValues(t, 2, calls.Load())
@@ -131,6 +131,6 @@ func TestVerify_NoCacheWhenTTLIsZero(t *testing.T) {
 func TestVerify_EndpointUnreachable(t *testing.T) {
 	t.Parallel()
 
-	v := New("http://127.0.0.1:1", 0)
+	v := New("http://127.0.0.1:1", 0, 0)
 	assert.Error(t, v.Verify(context.Background(), "Bearer token"))
 }

@@ -19,7 +19,9 @@ func NewFactory() extension.Factory {
 }
 
 func createDefaultConfig() component.Config {
-	return &Config{}
+	return &Config{
+		CacheSize: 1000,
+	}
 }
 
 func createExtension(_ context.Context, _ extension.Settings, cfg component.Config) (extension.Extension, error) {
