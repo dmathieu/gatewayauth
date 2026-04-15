@@ -22,7 +22,7 @@ func TestLoadConfig(t *testing.T) {
 	}{
 		{
 			id:       component.NewID(metadata.Type),
-			expected: &Config{},
+			expected: &Config{Endpoint: "https://auth.example.com/validate"},
 		},
 	}
 
@@ -43,6 +43,42 @@ func TestLoadConfig(t *testing.T) {
 			}
 			assert.NoError(t, xconfmap.Validate(cfg))
 			assert.Equal(t, tt.expected, cfg)
+		})
+	}
+}
+
+func TestConfigValidate(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		cfg     *Config
+		wantErr bool
+	}{
+		{
+			name: "valid endpoint",
+			cfg:  &Config{Endpoint: "https://auth.example.com/validate"},
+		},
+		{
+			name:    "empty endpoint",
+			cfg:     &Config{},
+			wantErr: true,
+		},
+		{
+			name:    "invalid URL",
+			cfg:     &Config{Endpoint: "not a url"},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.cfg.Validate()
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
 		})
 	}
 }

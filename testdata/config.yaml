@@ -1,1 +1,2 @@
 gatewayauth:
+  endpoint: "https://auth.example.com/validate"
