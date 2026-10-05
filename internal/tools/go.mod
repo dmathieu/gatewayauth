@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/golangci/golangci-lint/v2 v2.14.0
-	go.opentelemetry.io/collector/cmd/mdatagen v0.161.0
+	go.opentelemetry.io/collector/cmd/mdatagen v0.162.0
 )
 
 require (
@@ -212,13 +212,13 @@ require (
 	go-simpler.org/sloglint v0.12.0 // indirect
 	go.augendre.info/arangolint v0.4.0 // indirect
 	go.augendre.info/fatcontext v0.10.1 // indirect
-	go.opentelemetry.io/collector/component v1.67.0 // indirect
-	go.opentelemetry.io/collector/confmap v1.67.0 // indirect
-	go.opentelemetry.io/collector/confmap/provider/fileprovider v1.67.0 // indirect
-	go.opentelemetry.io/collector/featuregate v1.67.0 // indirect
-	go.opentelemetry.io/collector/filter v0.161.0 // indirect
-	go.opentelemetry.io/collector/internal/schemagen v0.161.0 // indirect
-	go.opentelemetry.io/collector/pdata v1.67.0 // indirect
+	go.opentelemetry.io/collector/component v1.68.0 // indirect
+	go.opentelemetry.io/collector/confmap v1.68.0 // indirect
+	go.opentelemetry.io/collector/confmap/provider/fileprovider v1.68.0 // indirect
+	go.opentelemetry.io/collector/featuregate v1.68.0 // indirect
+	go.opentelemetry.io/collector/filter v0.162.0 // indirect
+	go.opentelemetry.io/collector/internal/schemagen v0.162.0 // indirect
+	go.opentelemetry.io/collector/pdata v1.68.0 // indirect
 	go.opentelemetry.io/otel v1.46.0 // indirect
 	go.opentelemetry.io/otel/metric v1.46.0 // indirect
 	go.opentelemetry.io/otel/trace v1.46.0 // indirect
@@ -229,7 +229,7 @@ require (
 	golang.org/x/mod v0.41.0 // indirect
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
 	golang.org/x/tools v0.50.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
